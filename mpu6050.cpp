@@ -1,5 +1,3 @@
-// mpu6050: Orientation & Angular Velocity, Inertial Acceleration, Movement & Distance, Zero Velocity Update
-
 #include <Wire.h>
 #include <BasicLinearAlgebra.h>
 
@@ -27,11 +25,6 @@ float RateRollDegS, RatePitchDegS, RateYawDegS;
 
 // Output 3: Linear Acceleration in Earth Frame (m/s^2)
 float AccXEarth = 0, AccYEarth = 0, AccZEarth = 0;
-
-// Output 4: Position and Distance (Meters)
-float PosX = 0, PosY = 0, PosZ = 0;
-float TotalDistanceMoved = 0;
-float PrevPosX = 0, PrevPosY = 0, PrevPosZ = 0;
 
 // --- 1D Kalman Filter Variables (Roll & Pitch) ---
 float KalmanAngleRoll = 0, UncertaintyRoll = 4.0;
@@ -131,27 +124,6 @@ void loop() {
   if (abs(AccYEarth) < motionThreshold) AccYEarth = 0;
   if (abs(AccZEarth) < motionThreshold) AccZEarth = 0;
 
-  // Run 3D Kalman Filter for Position
-  float VelX, VelY, VelZ;
-  update3DKalman(kfX, AccXEarth, PosX, VelX);
-  update3DKalman(kfY, AccYEarth, PosY, VelY);
-  update3DKalman(kfZ, AccZEarth, PosZ, VelZ);
-
-  // ZUPT: Reset velocity if no active acceleration is detected
-  if (AccXEarth == 0) kfX.State(1,0) = 0;
-  if (AccYEarth == 0) kfY.State(1,0) = 0;
-  if (AccZEarth == 0) kfZ.State(1,0) = 0;
-
-  // Compute Total Cumulative Distance Moved (Meters)
-  float dX = PosX - PrevPosX;
-  float dY = PosY - PrevPosY;
-  float dZ = PosZ - PrevPosZ;
-  TotalDistanceMoved += sqrt(dX * dX + dY * dY + dZ * dZ);
-
-  PrevPosX = PosX;
-  PrevPosY = PosY;
-  PrevPosZ = PosZ;
-
   // --- Print Telemetry Outputs ---
   Serial.print("Angles(deg) R:"); Serial.print(AngleRoll, 3);
   Serial.print(" P:"); Serial.print(AnglePitch, 3);
@@ -164,8 +136,6 @@ void loop() {
   Serial.print(" | Acc(m/s2) X:"); Serial.print(AccXEarth, 4);
   Serial.print(" Y:"); Serial.print(AccYEarth, 4);
   Serial.print(" Z:"); Serial.println(AccZEarth, 4);
-
-  //Serial.print(" | Distance(m):"); Serial.println(TotalDistanceMoved, 3);
 
   // Maintain strict 250Hz loop speed
   while (micros() - LoopTimer < 4000);
