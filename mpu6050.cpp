@@ -150,6 +150,7 @@ void setup() {
 }
 
 void loop() {
+  processIMUData();
   // Maintain strict 250Hz loop speed
   while (micros() - LoopTimer < 4000);
   LoopTimer = micros();
