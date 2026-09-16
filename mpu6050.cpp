@@ -10,14 +10,14 @@ uint32_t LoopTimer;
 const float dt = 0.004; // 250 Hz Loop (4ms)
 float RateRoll, RatePitch, RateYaw;
 float RateCalRoll = 0, RateCalPitch = 0, RateCalYaw = 0;
-float AccX, AccY, AccZ;
-float AccCalX = 0, AccCalY = 0, AccCalZ = 0;
 
 // callable start
-float AngleRoll = 0, AnglePitch = 0, AngleYaw = 0;
+float AccX, AccY, AccZ;
+float AngleRoll = 0, AnglePitch = 0;
 float RateRollDegS, RatePitchDegS, RateYawDegS;
-float AccXEarth = 0, AccYEarth = 0, AccZEarth = 0;
 // callable end
+
+float AccCalX = 0, AccCalY = 0, AccCalZ = 0;
 
 float KalmanAngleRoll = 0, UncertaintyRoll = 4.0;
 float KalmanAnglePitch = 0, UncertaintyPitch = 4.0;
@@ -105,14 +105,6 @@ void processIMUData() {
   // 2. Accurate Angles using 1D Kalman Filter (Degrees)
   update1DKalman(KalmanAngleRoll, UncertaintyRoll, RateRollDegS, AccAngleRoll);
   update1DKalman(KalmanAnglePitch, UncertaintyPitch, RatePitchDegS, AccAnglePitch);
-  AngleYaw += RateYawDegS * dt; // Yaw integration (heading relative to startup)
-
-  //3. Logic to remove yaw drift
-  if (abs(RateYawDegS) < 3) RateYawDegS = 0;
-  bool isStationary = (AccXEarth == 0.0) && (AccYEarth == 0.0) && (AccZEarth == 0.0);
-  if (!isStationary) {
-    AngleYaw += RateYawDegS * dt;
-  }
 
   AngleRoll  = KalmanAngleRoll;
   AnglePitch = KalmanAnglePitch;
@@ -126,18 +118,6 @@ void processIMUData() {
   float ax = (AccX - AccCalX) * 9.81;
   float ay = (AccY - AccCalY) * 9.81;
   float az = (AccZ - AccCalZ) * 9.81;
-
-  // Rotate body acceleration to Earth navigation frame
-  AccXEarth = 0.34 + cos(rPitch) * ax + sin(rRoll) * sin(rPitch) * ay + cos(rRoll) * sin(rPitch) * az;
-  AccYEarth = cos(rRoll) * ay - sin(rRoll) * az;
-  AccZEarth = -sin(rPitch) * ax + sin(rRoll) * cos(rPitch) * ay + cos(rRoll) * cos(rPitch) * az - 9.81; // Subtract Gravity
-  
-
-  // 5. Motion Detection & Zero Velocity Update (ZUPT)
-  float motionThreshold = 0.15; // m/s^2 threshold for noise filtering
-  if (abs(AccXEarth) < motionThreshold) AccXEarth = 0;
-  if (abs(AccYEarth) < motionThreshold) AccYEarth = 0;
-  if (abs(AccZEarth) < motionThreshold) AccZEarth = 0;
 }
 
 void setup() {
