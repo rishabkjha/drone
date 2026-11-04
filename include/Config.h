@@ -11,7 +11,7 @@
 // #define HOVERIT_SOFTAP 1            // drone makes its own network "HoverIt" / hoverit123
 
 // ---- Pins
-const int SDA_PIN = 8, SCL_PIN = 9;
+const int SDA_PIN = 9, SCL_PIN = 8;
 const int ESC_FL_PIN = 5;              // front left,  prop anticlockwise
 const int ESC_FR_PIN = 6;              // front right, prop clockwise
 const int ESC_RL_PIN = 10;             // rear left,   prop clockwise

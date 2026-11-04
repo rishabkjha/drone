@@ -32,7 +32,7 @@
 //  the ESP32 core). No other files: this .ino is the whole program.
 //
 //  Wiring
-//    MPU6050 0x68, VL53L0X 0x29, BMP280 0x76 on I2C SDA 8 / SCL 9
+//    MPU6050 0x68, VL53L0X 0x29, BMP280 0x76 on I2C SDA 9 / SCL 8
 //    ESC front left  GPIO 5   (prop ACW)       ESC front right GPIO 6  (prop CW)
 //    ESC rear left   GPIO 10  (prop CW)        ESC rear right  GPIO 3  (prop ACW)
 //    Battery 18K / 10K divider -> GPIO 0
@@ -89,7 +89,7 @@
 // #define HOVERIT_SOFTAP 1            // drone makes its own network "HoverIt" / hoverit123
 
 // ---- Pins
-const int SDA_PIN = 8, SCL_PIN = 9;
+const int SDA_PIN = 9, SCL_PIN = 8;
 const int ESC_FL_PIN = 5;              // front left,  prop anticlockwise
 const int ESC_FR_PIN = 6;              // front right, prop clockwise
 const int ESC_RL_PIN = 10;             // rear left,   prop clockwise
@@ -1064,7 +1064,7 @@ private:
 
   void tofInit() {
     // which chips answer on the bus: 0x29 VL53L0X, 0x68 MPU6050, 0x76/0x77 BMP280
-    Serial.print("[Height] I2C devices on SDA 8 / SCL 9:");
+    Serial.print("[Height] I2C devices on SDA 9 / SCL 8:");
     int found = 0;
     for (uint8_t a = 1; a < 127; a++) {
       Wire.beginTransmission(a);

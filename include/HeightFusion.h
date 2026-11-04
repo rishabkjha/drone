@@ -219,7 +219,7 @@ private:
 
   void tofInit() {
     // which chips answer on the bus: 0x29 VL53L0X, 0x68 MPU6050, 0x76/0x77 BMP280
-    Serial.print("[Height] I2C devices on SDA 8 / SCL 9:");
+    Serial.print("[Height] I2C devices on SDA 9 / SCL 8:");
     int found = 0;
     for (uint8_t a = 1; a < 127; a++) {
       Wire.beginTransmission(a);

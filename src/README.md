@@ -63,7 +63,7 @@ Details: tuning in [section 8](#8-tuning-from-the-app), trim in [section 9](#9-f
 
 | Signal | GPIO |
 |---|---|
-| I2C SDA / SCL (MPU6050 + VL53L0X) | 8 / 9 |
+| I2C SDA / SCL (MPU6050 + VL53L0X) | 9 / 8 |
 | ESC front left (prop ACW) | 5 |
 | ESC front right (prop CW) | 6 |
 | ESC rear left (prop CW) | 10 |
