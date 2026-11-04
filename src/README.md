@@ -331,7 +331,7 @@ Also: `[HoverIt] N packets/s ...` every 5 s (50 expected), `[Tune] ...` when you
 | | `LEASH_CM` | 40 | Held height stays this close to the real one |
 | | `HEIGHT_TAU_S` | 0.4 s | ToF/accel blend (0.25 s while the accel is gated) |
 | | `TOF_LOST_MS` | 300 | No ToF this long = height unknown |
-| Battery | `BATT_DIVIDER`, `BATT_CAL` | 2.8, 1.0 | `BATT_CAL` = multimeter V / printed V |
+| Battery | `BATT_DIVIDER`, `BATT_CAL` | 2.8, 1.062 | `BATT_CAL` = multimeter V / printed V |
 | | `BATT_EMPTY_V / FULL_V` | 6.8 / 8.4 V | App shows 0 / full |
 
 ---

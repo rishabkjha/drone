@@ -160,7 +160,7 @@ const bool  USE_BARO             = false;
 
 // ---- Battery (2S, 18K top / 10K bottom)
 const float BATT_DIVIDER = 2.8f;
-const float BATT_CAL     = 1.000f;     // multimeter volts / printed volts
+const float BATT_CAL     = 1.062f;     // multimeter volts / printed volts (8.20 / 7.72)
 const float BATT_EMPTY_V = 6.8f;       // app shows 0
 const float BATT_FULL_V  = 8.4f;       // app shows 255
 
