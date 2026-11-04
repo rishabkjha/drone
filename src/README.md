@@ -64,20 +64,20 @@ Details: tuning in [section 8](#8-tuning-from-the-app), trim in [section 9](#9-f
 | Signal | GPIO |
 |---|---|
 | I2C SDA / SCL (MPU6050 + VL53L0X) | 8 / 9 |
-| ESC front left (prop CW) | 5 |
-| ESC front right (prop ACW) | 6 |
-| ESC rear left (prop ACW) | 10 |
-| ESC rear right (prop CW) | 3 |
+| ESC front left (prop ACW) | 5 |
+| ESC front right (prop CW) | 6 |
+| ESC rear left (prop CW) | 10 |
+| ESC rear right (prop ACW) | 3 |
 | Battery divider | 0 |
 
 ```
         FRONT
-  FL (5, CW)   FR (6, ACW)
+  FL (5, ACW)  FR (6, CW)
          \     /
           \   /
           /   \
          /     \
-  RL (10, ACW) RR (3, CW)
+  RL (10, CW)  RR (3, ACW)
         BACK
 ```
 
@@ -146,7 +146,7 @@ Unzip `FlightController_v2_PlatformIO.zip` and open the folder. `platformio.ini`
 4. **Arm** with the throttle at the bottom, then raise it just above the bottom (the PIDs start at 1060 us):
    - press the right side down: the **right** motors speed up
    - press the nose down: the **front** motors speed up
-   - yaw stick right: **front right + rear left** speed up
+   - yaw stick right: **front left + rear right** speed up
 5. Then props on, a low hover over grass, tethered if you can.
 
 If a stick moves the drone the wrong way, flip `ROLL_SIGN`, `PITCH_SIGN` or `YAW_SIGN` in `Config.h`.
@@ -342,7 +342,7 @@ Also: `[HoverIt] N packets/s ...` every 5 s (50 expected), `[Tune] ...` when you
 - **Kalman filter per axis:** the gyro predicts the angle, the accelerometer corrects it (gyro std 4°/s, accel std 3°). It runs with the real measured loop time.
 - **Vibration gate:** when motor vibration shakes the accelerometer past 0.25 g, the angle runs on the gyro alone. The accel comes back only after 0.5 s below 0.12 g, and only if it agrees within 15°.
 - **Cascade:** stick → angle setpoint (+ trim) → `ANGLE_KP` × error + `ANGLE_FF` × stick speed → wanted rate → rate PID on the gyro → motor correction. D works on the gyro (no kick when the stick moves), with a 30 Hz filter. I is trapezoidal and clamped.
-- **Mixer (quad X):** `FL = T+R−P−Y`, `FR = T−R−P+Y`, `RL = T+R+P+Y`, `RR = T−R+P−Y`.
+- **Mixer (quad X):** `FL = T+R−P+Y`, `FR = T−R−P−Y`, `RL = T+R+P−Y`, `RR = T−R+P+Y`.
 
 **Height (LOITER, LAND)**
 - The VL53L0X distance × cos(roll) × cos(pitch), minus the ground reading at boot = height. It is ignored past 35° tilt or 2 m.

@@ -30,12 +30,12 @@ public:
   // Quad X mixer.
   // R + = more roll-right wanted: left motors up, right down.
   // P + = more nose-down wanted: rear motors up, front down.
-  // Y + = more clockwise yaw wanted: the anticlockwise props (FR, RL) up.
+  // Y + = more clockwise yaw wanted: the anticlockwise props (FL, RR) up.
   void mix(float T, float R, float P, float Y, int minUs) {
-    write(FL, constrain((int)(T + R - P - Y), minUs, ESC_MAX_US));
-    write(FR, constrain((int)(T - R - P + Y), minUs, ESC_MAX_US));
-    write(RL, constrain((int)(T + R + P + Y), minUs, ESC_MAX_US));
-    write(RR, constrain((int)(T - R + P - Y), minUs, ESC_MAX_US));
+    write(FL, constrain((int)(T + R - P + Y), minUs, ESC_MAX_US));
+    write(FR, constrain((int)(T - R - P - Y), minUs, ESC_MAX_US));
+    write(RL, constrain((int)(T + R + P - Y), minUs, ESC_MAX_US));
+    write(RR, constrain((int)(T - R + P + Y), minUs, ESC_MAX_US));
   }
 
   // Boot check: each motor alone, named on the Serial Monitor. If the one that
@@ -53,7 +53,7 @@ public:
 
 private:
   const int PINS[4] = { ESC_FL_PIN, ESC_FR_PIN, ESC_RL_PIN, ESC_RR_PIN };
-  const char* const NAMES[4] = { "FRONT LEFT (CW)", "FRONT RIGHT (ACW)", "REAR LEFT (ACW)", "REAR RIGHT (CW)" };
+  const char* const NAMES[4] = { "FRONT LEFT (ACW)", "FRONT RIGHT (CW)", "REAR LEFT (CW)", "REAR RIGHT (ACW)" };
   Servo esc[4];
 };
 

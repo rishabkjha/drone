@@ -33,8 +33,8 @@
 //
 //  Wiring
 //    MPU6050 0x68, VL53L0X 0x29, BMP280 0x76 on I2C SDA 8 / SCL 9
-//    ESC front left  GPIO 5   (prop CW)        ESC front right GPIO 6  (prop ACW)
-//    ESC rear left   GPIO 10  (prop ACW)       ESC rear right  GPIO 3  (prop CW)
+//    ESC front left  GPIO 5   (prop ACW)       ESC front right GPIO 6  (prop CW)
+//    ESC rear left   GPIO 10  (prop CW)        ESC rear right  GPIO 3  (prop ACW)
 //    Battery 18K / 10K divider -> GPIO 0
 //
 //  Flight modes (picked in the app's Options):
@@ -67,7 +67,7 @@
 //      turn clockwise (from above) -> RATE "Y" goes +.
 //   4. Arm, throttle just above the bottom (PID starts at 1060 us). Press the
 //      right side down: the RIGHT motors speed up. Press the nose down: the
-//      FRONT motors speed up. Yaw stick right: front right + rear left speed up.
+//      FRONT motors speed up. Yaw stick right: front left + rear right speed up.
 //   5. Then props on, low hover over grass, tethered if you can.
 // ============================================================================
 
@@ -90,10 +90,10 @@
 
 // ---- Pins
 const int SDA_PIN = 8, SCL_PIN = 9;
-const int ESC_FL_PIN = 5;              // front left,  prop clockwise
-const int ESC_FR_PIN = 6;              // front right, prop anticlockwise
-const int ESC_RL_PIN = 10;             // rear left,   prop anticlockwise
-const int ESC_RR_PIN = 3;              // rear right,  prop clockwise
+const int ESC_FL_PIN = 5;              // front left,  prop anticlockwise
+const int ESC_FR_PIN = 6;              // front right, prop clockwise
+const int ESC_RL_PIN = 10;             // rear left,   prop clockwise
+const int ESC_RR_PIN = 3;              // rear right,  prop anticlockwise
 const int BATT_PIN   = 0;
 
 // ---- Loop
@@ -782,7 +782,7 @@ void resetAttitudePid() {
 namespace Motors {
 enum { FL, FR, RL, RR };
 const int PINS[4] = { ESC_FL_PIN, ESC_FR_PIN, ESC_RL_PIN, ESC_RR_PIN };
-const char* const NAMES[4] = { "FRONT LEFT (CW)", "FRONT RIGHT (ACW)", "REAR LEFT (ACW)", "REAR RIGHT (CW)" };
+const char* const NAMES[4] = { "FRONT LEFT (ACW)", "FRONT RIGHT (CW)", "REAR LEFT (CW)", "REAR RIGHT (ACW)" };
 Servo esc[4];
 int Us[4] = { 1000, 1000, 1000, 1000 };
 
@@ -1670,16 +1670,16 @@ void loop() {
   // ---- quad X mixer ----------------------------------------------------------
   // R + = more roll-right wanted: left motors up, right down.
   // P + = more nose-down wanted: rear motors up, front down.
-  // Y + = more clockwise yaw wanted: the anticlockwise props (FR, RL) up.
+  // Y + = more clockwise yaw wanted: the anticlockwise props (FL, RR) up.
   if (c.motors) {
     Flying = true;
     Throttle = c.throttle;
     int minUs = c.pid ? ESC_IDLE_US : ESC_MIN_US;
     float T = Throttle;
-    Motors::write(Motors::FL, constrain((int)(T + OutR - OutP - OutY), minUs, ESC_MAX_US));
-    Motors::write(Motors::FR, constrain((int)(T - OutR - OutP + OutY), minUs, ESC_MAX_US));
-    Motors::write(Motors::RL, constrain((int)(T + OutR + OutP + OutY), minUs, ESC_MAX_US));
-    Motors::write(Motors::RR, constrain((int)(T - OutR + OutP - OutY), minUs, ESC_MAX_US));
+    Motors::write(Motors::FL, constrain((int)(T + OutR - OutP + OutY), minUs, ESC_MAX_US));
+    Motors::write(Motors::FR, constrain((int)(T - OutR - OutP - OutY), minUs, ESC_MAX_US));
+    Motors::write(Motors::RL, constrain((int)(T + OutR + OutP - OutY), minUs, ESC_MAX_US));
+    Motors::write(Motors::RR, constrain((int)(T - OutR + OutP + OutY), minUs, ESC_MAX_US));
   } else {
     Flying = false;
     Throttle = 1000;
