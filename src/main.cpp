@@ -33,8 +33,8 @@
 //
 //  Wiring
 //    MPU6050 0x68, VL53L0X 0x29, BMP280 0x76 on I2C SDA 8 / SCL 9
-//    ESC front left  GPIO 6   (prop CW)        ESC front right GPIO 5  (prop ACW)
-//    ESC rear left   GPIO 3   (prop ACW)       ESC rear right  GPIO 10 (prop CW)
+//    ESC front left  GPIO 5   (prop CW)        ESC front right GPIO 6  (prop ACW)
+//    ESC rear left   GPIO 10  (prop ACW)       ESC rear right  GPIO 3  (prop CW)
 //    Battery 18K / 10K divider -> GPIO 0
 //
 //  Flight modes (picked in the app's Options):
@@ -90,10 +90,10 @@
 
 // ---- Pins
 const int SDA_PIN = 8, SCL_PIN = 9;
-const int ESC_FL_PIN = 6;              // front left,  prop clockwise
-const int ESC_FR_PIN = 5;              // front right, prop anticlockwise
-const int ESC_RL_PIN = 3;              // rear left,   prop anticlockwise
-const int ESC_RR_PIN = 10;             // rear right,  prop clockwise
+const int ESC_FL_PIN = 5;              // front left,  prop clockwise
+const int ESC_FR_PIN = 6;              // front right, prop anticlockwise
+const int ESC_RL_PIN = 10;             // rear left,   prop anticlockwise
+const int ESC_RR_PIN = 3;              // rear right,  prop clockwise
 const int BATT_PIN   = 0;
 
 // ---- Loop

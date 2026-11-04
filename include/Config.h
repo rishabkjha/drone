@@ -12,10 +12,10 @@
 
 // ---- Pins
 const int SDA_PIN = 8, SCL_PIN = 9;
-const int ESC_FL_PIN = 6;              // front left,  prop clockwise
-const int ESC_FR_PIN = 5;              // front right, prop anticlockwise
-const int ESC_RL_PIN = 3;              // rear left,   prop anticlockwise
-const int ESC_RR_PIN = 10;             // rear right,  prop clockwise
+const int ESC_FL_PIN = 5;              // front left,  prop clockwise
+const int ESC_FR_PIN = 6;              // front right, prop anticlockwise
+const int ESC_RL_PIN = 10;             // rear left,   prop anticlockwise
+const int ESC_RR_PIN = 3;              // rear right,  prop clockwise
 const int BATT_PIN   = 0;
 
 // ---- Loop
