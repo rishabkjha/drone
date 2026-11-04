@@ -1,0 +1,76 @@
+// ESC calibration + bench throttle test for ESP32-C3 SuperMini
+// ESCs on GPIO 3, 6, 5, 10.  REMOVE PROPS before running.
+//
+// Calibration steps:
+//   1. Battery UNPLUGGED. Flash this sketch, open Serial Monitor at 115200 (line ending: Newline).
+//   2. Board starts sending 2000 us (full throttle) to all ESCs.
+//   3. Plug in the battery. ESCs beep, then give the "max throttle" beeps.
+//   4. Type c and press Enter: board drops to 1000 us. ESCs give the long confirm beep(s).
+//   5. Calibration is done. Type a value 1000-2000 to spin motors, 0 to stop.
+//
+// To skip calibration (ESCs already calibrated): type s instead of c in step 4.
+
+#include <ESP32Servo.h>
+
+const int ESC_PINS[4] = {3, 6, 5, 10};
+const int ESC_MIN_US = 1000;
+const int ESC_MAX_US = 2000;
+
+Servo esc[4];
+bool calibrated = false;
+
+void setAll(int us) {
+  us = constrain(us, ESC_MIN_US, ESC_MAX_US);
+  for (int i = 0; i < 4; i++) esc[i].writeMicroseconds(us);
+}
+
+void setup() {
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+
+  for (int i = 0; i < 4; i++) {
+    esc[i].setPeriodHertz(400);                       // standard ESC frame rate
+    esc[i].attach(ESC_PINS[i], ESC_MIN_US, ESC_MAX_US);
+    esc[i].writeMicroseconds(ESC_MAX_US);            // high immediately, before ESCs get power
+  }
+
+  Serial.begin(115200);
+  delay(1500);  // give USB serial time to connect
+  Serial.println();
+  Serial.println("Sending 2000 us to all ESCs. PROPS OFF.");
+  Serial.println("Plug in the battery now and wait for the max-throttle beeps.");
+  Serial.println("Then type c + Enter to finish calibration (or s to skip).");
+}
+
+void loop() {
+  if (!Serial.available()) return;
+  String line = Serial.readStringUntil('\n');
+  line.trim();
+  if (line.length() == 0) return;
+
+  if (!calibrated) {
+    if (line == "c" || line == "s") {
+      setAll(ESC_MIN_US);
+      calibrated = true;
+      Serial.println(line == "c" ? "Sent 1000 us. Wait for the long confirm beep(s)."
+                                 : "Skipped calibration, holding 1000 us.");
+      Serial.println("Now type 1000-2000 to set throttle, 0 to stop.");
+    } else {
+      Serial.println("Type c to calibrate or s to skip.");
+    }
+    return;
+  }
+
+  int us = line.toInt();
+  if (us == 0) {
+    setAll(ESC_MIN_US);
+    Serial.println("Stopped (1000 us).");
+  } else if (us >= ESC_MIN_US && us <= ESC_MAX_US) {
+    setAll(us);
+    Serial.printf("Throttle: %d us\n", us);
+  } else {
+    Serial.println("Enter 1000-2000, or 0 to stop.");
+  }
+}
