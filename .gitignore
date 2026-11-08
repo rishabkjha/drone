@@ -3,3 +3,17 @@
 .vscode/ipch
 .vscode/c_cpp_properties.json
 .vscode/launch.json
+
+# HoverIt Android app
+HoverIt/**/build/
+HoverIt/**/.gradle/
+HoverIt/**/.idea/
+HoverIt/**/.kotlin/
+HoverIt/**/.cxx/
+HoverIt/**/captures/
+HoverIt/**/local.properties
+HoverIt/**/*.apk
+HoverIt/**/*.aab
+HoverIt/**/*.jks
+HoverIt/**/*.keystore
+HoverIt/**/google-services.json

@@ -1,0 +1,38 @@
+# HoverIt
+
+Android app (Kotlin + Jetpack Compose, glassmorphism) that flies the ESP32 SuperMini drone over Wi-Fi, plus the drone-side receiver `HoverItRx.h`.
+
+## Run the app
+1. Android Studio (Ladybug or newer) > Open > the `HoverIt` folder. Let Gradle sync (AGP 8.7.3, Kotlin 2.0.21, Compose BOM 2024.12.01, Gradle 8.11.1 wrapper).
+2. Plug in the phone with USB debugging on and press Run. minSdk 26 (Android 8), landscape only.
+
+## Set up the drone
+1. Copy `HoverItRx.h` next to your flight controller sketch.
+2. Put your phone hotspot name and password in `HOTSPOT_SSID` / `HOTSPOT_PASS`.
+   No hotspot? `#define HOVERIT_SOFTAP 1` before the include and join the phone to the "HoverIt" network (password `hoverit123`).
+3. Follow the example at the bottom of the header, or use `drone/FlightController.ino` (full flight controller with PID tuning from the app).
+4. Turn on the hotspot, power the drone, open the app, tap Connect. It turns green when telemetry arrives.
+
+## Screens
+- Startup: animated HoverIt logo, then the stick screen.
+- Sticks: left = throttle (Y, holds) + yaw (X, springs back); right = pitch/roll (both spring back). The left pad shows the flight mode and what the drone is doing, the right pad its height. Land locks the throttle stick, Autonomous locks both.
+- Options, left: the four flight modes (Stabilize, Loiter, Land, Autonomous, see `drone/FlightController/FlightModes.h`). Tapping one always opens the stick screen in that mode. Land/Autonomous are never remembered between app starts.
+- Options, right: Tuning Mode, Baro Training (on = training flight when armed on the ground, off = kill), Theme (Red = coral/magenta, Blue = sky/royal blue with the background recoloured blue).
+- Tuning: the top-right button enables / disables the sliders (off by default; off = locked, and switching off while disarmed saves on the drone). Pick a PID loop at the top left (ROLL+PITCH rate, YAW RATE, VERT VEL = vertical velocity), then the KP, KI, KD, FF sliders (0-255). Picking a loop loads the drone's values into the sliders, moving one changes it live.
+- Centre column on every screen: Connect (green connected / red not), Arm/Disarm (green disarmed / red armed), Options (fills with water to battery/255; the water stays level as you tilt the phone, ui/Tilt.kt).
+
+## Link (UDP)
+| Direction | Port | Rate | Bytes |
+|---|---|---|---|
+| phone -> drone | 4210 | 50 Hz | `'H' seq thr yaw pitch roll kp ki kd ff loop flags ver xor` (14) |
+| drone -> phone | 4211 | 10 Hz | `'D' seq battery flags loop kp ki kd ff height status xor` (12) |
+
+`flags` (phone): bit0 armed, bit1 baro training, bit2 tuning sliders enabled, bits 4-5 flight mode (0 Stabilize, 1 Loiter, 2 Land, 3 Autonomous). `flags` (drone): bit0 armed, bit1 training flight running, bits 4-5 mode being flown. `height` = cm / 2, `status` = `FlightStatus` (FlightModeCommon.h; FLIGHT_STATUS in DroneLink.kt).
+Protocol version 3: an older app or drone sketch will not talk to this one, so update both.
+`loop`: 0 roll + pitch rate, 1 yaw rate, 2 vertical velocity (climb rate). The angle and height loops are fixed constants on the drone (AttitudePID.h, HeightPID.h).
+The drone broadcasts telemetry until the phone answers, so no IP needs typing.
+
+## Safety
+- Drone failsafe: no packet for 500 ms -> disarmed, sticks centred, throttle 0.
+- App: shows disconnected after 1 s without telemetry and disarms itself.
+- Arming needs throttle at the bottom (app and drone both check); the drone needs a fresh 0 -> 1 arm press.
