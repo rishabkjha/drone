@@ -21,7 +21,7 @@ Screens: Loiter (sticks), Tuning (KP / KI / KD / FF sliders per loop, sent live 
 
 UDP over Wi-Fi, protocol v3. Phone → drone on port 4210 at 50 Hz (sticks, arm, mode, gains). Drone → phone on port 4211 at 10 Hz (battery, height, status, gains). The drone broadcasts until the phone answers, so no IP needs typing. The drone disarms after 500 ms with no packet.
 
-The drone side of the link is `include/HoverItRx.h`. The `HoverIt/HoverItRx.h` copy and the link table in `HoverIt/README.md` are the older protocol v1, kept as they came with the app: use the one in `include/`.
+The drone side of the link is [`include/HoverItRx.h`](include/HoverItRx.h); the app side is `HoverIt/HoverIt/app/src/main/java/com/hoverit/app/DroneLink.kt`. Byte layout: [HoverIt/README.md](HoverIt/README.md#link-udp-protocol-v3).
 
 ## Licence
 
