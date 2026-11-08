@@ -25,12 +25,15 @@ The drone side of the link is [`include/HoverItRx.h`](include/HoverItRx.h); the 
 
 ## Future scope
 
-The target is a two-drone surveillance system: a larger **mother drone** on 10 or 11 inch props, and this mini drone working from it.
+The long-term goal is a two-drone surveillance system:
 
-- **Air refueling:** the mini drone recharges in the air from the airborne mother drone, so it can go back to work without landing or a battery swap.
-- **Area survey:** the mini drone carries a camera and flies a set shape (a pattern over the area) to survey a small area.
-- **Active obstacle avoidance:** it senses obstacles and steers around them during the survey.
-- **Surveillance missions:** the mother drone carries the mini drone out and keeps it charged, and the mini drone does the close-up survey. Together they cover a larger survey area and keep surveying for longer, so the mission lasts much longer than one small battery allows.
+- **Mother drone:** a 10-11 inch prop carrier drone that stays airborne over the mission area.
+- **Mini drone (this 3 inch quad):** carries a camera, flies a set shape (for example a square or grid) to survey a small area, and avoids obstacles on its own (active obstacle avoidance).
+- **Air refueling:** the mini drone returns to the airborne mother drone to recharge, then goes back out, without landing.
+
+**Why:** a small drone surveys cheaply but has a short flight time. Recharging it from an airborne carrier lets one surveillance mission cover a larger survey area and keep surveying for longer, which improves the endurance of the mission.
+
+**Planned steps:** reliable position hold (optical flow, see the limits in [src/README.md](src/README.md#14-limits)), a camera and obstacle sensor on the mini drone, autonomous shape flights (the AUTONOMOUS square is the first step), precise approach and docking to the mother drone in flight, and in-flight charging.
 
 ## Licence
 
