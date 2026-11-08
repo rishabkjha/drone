@@ -23,6 +23,15 @@ UDP over Wi-Fi, protocol v3. Phone → drone on port 4210 at 50 Hz (sticks, arm,
 
 The drone side of the link is [`include/HoverItRx.h`](include/HoverItRx.h); the app side is `HoverIt/HoverIt/app/src/main/java/com/hoverit/app/DroneLink.kt`. Byte layout: [HoverIt/README.md](HoverIt/README.md#link-udp-protocol-v3).
 
+## Future scope
+
+The target is a two-drone surveillance system: a larger **mother drone** on 10 or 11 inch props, and this mini drone working from it.
+
+- **Air refueling:** the mini drone recharges in the air from the airborne mother drone, so it can go back to work without landing or a battery swap.
+- **Area survey:** the mini drone carries a camera and flies a set shape (a pattern over the area) to survey a small area.
+- **Active obstacle avoidance:** it senses obstacles and steers around them during the survey.
+- **Surveillance missions:** the mother drone carries the mini drone out and keeps it charged, and the mini drone does the close-up survey. Together they cover a larger survey area and keep surveying for longer, so the mission lasts much longer than one small battery allows.
+
 ## Licence
 
 The flight controller is based on the Carbon Aeronautics quadcopter flight controller and is CC BY-NC-SA 4.0 (non-commercial, share alike). See [src/README.md](src/README.md#15-credits-and-licence).
