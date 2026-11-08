@@ -14,11 +14,15 @@ Android app (Kotlin + Jetpack Compose, glassmorphism) that flies the ESP32 Super
 4. Turn on the hotspot, power the drone, open the app, tap Connect. It turns green when telemetry arrives.
 
 ## Screens
-- Startup: animated HoverIt logo, then Loiter.
-- Loiter: left stick = throttle (Y, holds) + yaw (X, springs back); right stick = pitch/roll (both spring back).
-- Tuning: KP, KI, KD, RR sliders, 0-255, saved on the phone.
-- Options: Loiter Mode, Tuning Mode, Autonomous Mode (1-bit toggle), Light/Dark Theme.
-- Centre column on every screen: Connect (green connected / red not), Arm/Disarm (green disarmed / red armed), Options (fills with water to battery/255).
+- **Startup:** animated HoverIt logo, then the stick screen.
+- **Sticks:** left stick = throttle `THR` (Y, stays where you leave it) + yaw `YAW` (X, springs back); right stick = pitch `PIT` / roll `ROL` (both spring back). Top left shows the flight mode and what the drone is doing; top right shows the height (`cm · baro` while the barometer is in use). Land locks the throttle; Autonomous locks both sticks (`AUTOPILOT`).
+- **Tuning:** the loop picker (‹ ROLL+PITCH / YAW RATE / VERT VEL ›) and the `TUNING OFF` / `TUNING ON` toggle across the top, then four 0-255 sliders: KP, KI, KD, FF. The sliders load the drone's gains for the picked loop and stay locked until you turn tuning on; changes are live. Leaving Tuning while disarmed saves the gains on the drone.
+- **Options:**
+  - Left: four flight-mode tiles, Stabilize (manual throttle), Loiter (50% stick holds height), Land (descend + disarm) and Autonomous. Tapping one picks it and opens the stick screen.
+  - Right: **Tuning Mode** (opens Tuning), **Enable Baro** (OFF = ToF only; ON = ToF below 50 cm, barometer above; the tile shows when the barometer is in use), and **Theme** (Red / Blue).
+- **Centre column on every screen:** Connect (`Searching…` while looking, green `Connected` with the drone's IP), Arm / Disarm (green disarmed, red armed; shakes if arming is refused), and Options (fills with water to the battery level and shows `battery N%`; tilt the phone and the water stays level).
+
+The app remembers the theme, Enable Baro, the picked PID loop and the last manual mode (Stabilize or Loiter). It never starts in Land or Autonomous.
 
 ## Link (UDP, protocol v3)
 Defined in [`include/HoverItRx.h`](../include/HoverItRx.h) (drone) and `app/src/main/java/com/hoverit/app/DroneLink.kt` (phone); keep the two in sync.
