@@ -1,4 +1,4 @@
-# FlightController_v2
+# HoverIt firmware
 
 Flight controller for the **ESP32-C3 SuperMini 3 inch quad**, flown and tuned from the **HoverIt** phone app (Android source in [`HoverIt/`](../HoverIt/)).
 
