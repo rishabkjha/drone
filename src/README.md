@@ -1,6 +1,6 @@
 # FlightController_v2
 
-Flight controller for the **ESP32-C3 SuperMini 3 inch quad**, flown and tuned from the **HoverIt** phone app.
+Flight controller for the **ESP32-C3 SuperMini 3 inch quad**, flown and tuned from the **HoverIt** phone app (Android source in [`HoverIt/`](../HoverIt/)).
 
 This is the single-file `SuperMini_Simple.ino` (the version that flies) split into one class per file. The loops, filters, gains, flight modes and app protocol are the same. In the simulator, this version and the single file gave the same motor outputs and angles at every step, with and without motor vibration. It has not been flown yet.
 
