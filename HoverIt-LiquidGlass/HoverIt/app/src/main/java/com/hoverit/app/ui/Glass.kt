@@ -53,6 +53,9 @@ import kotlin.math.sin
 /** Rounder than before: liquid glass panels read as soft, continuous shapes. */
 val GlassShape = RoundedCornerShape(36.dp)
 
+/** Fully round ends: the centre buttons are liquid capsules. */
+val CapsuleShape = RoundedCornerShape(50)
+
 /**
  * Liquid glass button. Pressing swells it a little on a soft spring and lights
  * the glass from under your finger.
@@ -66,6 +69,7 @@ fun GlassButton(
     onClick: () -> Unit,
     background: @Composable () -> Unit = {},
     labelStyle: TextStyle = LabelStyle,
+    shape: Shape = GlassShape,
 ) {
     val p = LocalGlass.current
     val interaction = remember { MutableInteractionSource() }
@@ -96,7 +100,7 @@ fun GlassButton(
                     }
                 }
             }
-            .glass(tint = tint, press = press, touch = touch)
+            .glass(shape = shape, tint = tint, press = press, touch = touch)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -140,6 +144,7 @@ fun ConnectButton(enabled: Boolean, connected: Boolean, address: String?, modifi
         subLabel = if (connected) address else if (searching) "tap to stop" else null,
         tint = if (searching) tint.copy(alpha = glow) else tint,
         modifier = modifier,
+        shape = CapsuleShape,
         onClick = onClick,
     )
 }
@@ -162,6 +167,7 @@ fun ArmButton(armed: Boolean, refusals: Int, modifier: Modifier, onClick: () -> 
         subLabel = if (armed) "ARMED" else "disarmed",
         tint = tint,
         modifier = modifier.graphicsLayer { translationX = shake.value * density },
+        shape = CapsuleShape,
         onClick = onClick,
     )
 }
@@ -188,6 +194,7 @@ fun OptionsBatteryButton(battery: Int, connected: Boolean, active: Boolean, modi
         label = "Options",
         subLabel = if (connected) "battery $percent%" else "battery --",
         modifier = modifier,
+        shape = CapsuleShape,
         onClick = onClick,
         background = {
             Canvas(Modifier.fillMaxSize()) {

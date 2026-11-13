@@ -48,6 +48,7 @@ class LiquidLens {
         width: Float, height: Float, radius: Float, density: Float,
         lightX: Float, lightY: Float, shine: Float,
         tint: Color = Color.Transparent,
+        zoom: Float = ZOOM,
     ): RenderEffect? {
         if (width < 1f || height < 1f) return null
         val sdk = Build.VERSION.SDK_INT
@@ -63,7 +64,7 @@ class LiquidLens {
         rs.setFloatUniform("radius", minOf(radius, minSide / 2f))
         rs.setFloatUniform("bezel", bezel)
         rs.setFloatUniform("depth", minOf(DEPTH_DP * density, bezel * 1.3f))
-        rs.setFloatUniform("zoom", ZOOM)
+        rs.setFloatUniform("zoom", zoom)
         rs.setFloatUniform("light", lightX, lightY)
         rs.setFloatUniform("shine", shine)
         rs.setFloatUniform("px", density)

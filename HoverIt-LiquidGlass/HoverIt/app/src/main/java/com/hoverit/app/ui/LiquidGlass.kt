@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.translate
@@ -90,6 +91,9 @@ private class GlassPosition {
  * [tintBrush] does the same with a gradient (joystick thumbs).
  * [press] 0..1 lights the glass from [touch] (a point inside it, px).
  * [lift] 0..1 makes the rim and bevel brighter (an active thumb).
+ * [zoom] < 1 magnifies through the middle (droplet thumbs magnify hard).
+ * [under] draws what lies beneath this glass inside its parent, in this
+ * element's coordinates, so the lens bends it too (crosshair under a thumb).
  */
 @Composable
 fun Modifier.glass(
@@ -100,6 +104,8 @@ fun Modifier.glass(
     press: Float = 0f,
     touch: Offset? = null,
     lift: Float = 0f,
+    zoom: Float = 0.94f,
+    under: (DrawScope.() -> Unit)? = null,
 ): Modifier {
     val p = LocalGlass.current
     val backdrop = LocalBackdrop.current
@@ -126,7 +132,7 @@ fun Modifier.glass(
 
             onDrawWithContent {
                 // with the shader, a solid tint goes into the lens itself (still see-through)
-                val shaderTint = if (shaderLight && tint != null) tint.copy(alpha = (tint.alpha * 0.85f).coerceAtMost(1f)) else Color.Transparent
+                val shaderTint = if (shaderLight && tint != null) tint.copy(alpha = (tint.alpha * 0.62f).coerceAtMost(1f)) else Color.Transparent
                 // light from the top left, swung by the phone's roll
                 val a = (-2.2f + roll.value * 0.9f)
                 val dir = Offset(cos(a), sin(a))
@@ -134,10 +140,11 @@ fun Modifier.glass(
 
                 // 1. the backdrop, seen through the lens (the shader also lights the rim)
                 if (lensLayer != null && backdrop != null) {
-                    lensLayer.renderEffect = lens.effect(size.width, size.height, radius, density, dir.x, dir.y, shine, shaderTint)
+                    lensLayer.renderEffect = lens.effect(size.width, size.height, radius, density, dir.x, dir.y, shine, shaderTint, zoom)
                     lensLayer.record {
                         val o = pos.offset
                         translate(-o.x, -o.y) { drawLayer(backdrop) }
+                        under?.invoke(this)   // what sits under this glass inside its parent (e.g. crosshair)
                     }
                     clipPath(path) { drawLayer(lensLayer) }
                 }

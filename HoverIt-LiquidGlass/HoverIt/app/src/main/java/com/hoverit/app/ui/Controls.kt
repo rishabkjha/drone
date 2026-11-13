@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
@@ -75,7 +76,12 @@ private fun fromByte(b: Int): Float = b.coerceIn(0, 255) / 255f * 2f - 1f
  * its rim, and it swells and brightens while you hold it.
  */
 @Composable
-private fun Thumb(active: Boolean, modifier: Modifier = Modifier, locked: Boolean = false) {
+private fun Thumb(
+    active: Boolean,
+    modifier: Modifier = Modifier,
+    locked: Boolean = false,
+    under: (DrawScope.() -> Unit)? = null,
+) {
     val lift by animateFloatAsState(
         if (active) 1f else 0f,
         spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow),
@@ -85,7 +91,14 @@ private fun Thumb(active: Boolean, modifier: Modifier = Modifier, locked: Boolea
         modifier
             .graphicsLayer { val sc = 1f + 0.12f * lift; scaleX = sc; scaleY = sc }
             .shadow((8f + 14f * lift).dp, ThumbShape, ambientColor = HoverColors.Coral, spotColor = HoverColors.Magenta)
-            .glass(shape = ThumbShape, tintBrush = HoverColors.Accent, borderWidth = 1.4.dp, lift = lift),
+            .then(
+                if (liquidShaderSupported()) {
+                    // a clear droplet: coral light through a strong magnifying lens
+                    Modifier.glass(shape = ThumbShape, tint = HoverColors.Coral, borderWidth = 1.4.dp, lift = lift, zoom = 0.72f, under = under)
+                } else {
+                    Modifier.glass(shape = ThumbShape, tintBrush = HoverColors.Accent, borderWidth = 1.4.dp, lift = lift)
+                },
+            ),
     )
 }
 
@@ -185,9 +198,20 @@ fun Joystick(
                 },
         )
 
+        val gridLine = p.gridLine
+        val crossStroke = with(density) { 1.3.dp.toPx() }
         Thumb(
             active && !lockedAll,
             locked = lockedAll,
+            // the crosshair under the thumb, in the thumb's own coordinates, so the droplet bends it
+            under = {
+                val ox = ax.value * rangeX
+                val oy = -ay.value * rangeY
+                val cx = size.width / 2f - ox
+                val cy = size.height / 2f - oy
+                drawLine(gridLine.copy(alpha = gridLine.alpha * dim), Offset(cx, -size.height), Offset(cx, size.height * 2f), crossStroke)
+                drawLine(gridLine.copy(alpha = gridLine.alpha * dim), Offset(-size.width, cy), Offset(size.width * 2f, cy), crossStroke)
+            },
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(thumb)
