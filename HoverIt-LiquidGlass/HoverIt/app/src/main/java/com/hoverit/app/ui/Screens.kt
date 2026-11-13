@@ -21,6 +21,11 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
+import kotlin.math.sin
+import kotlin.math.cos
+import kotlin.math.PI
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -101,6 +106,50 @@ private fun Backdrop() {
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.colorMatrix(SwapRedBlue),
         )
+    }
+    BackdropDetail()
+}
+
+/**
+ * Something for the glass to bend. Liquid Glass reads through refraction, and a
+ * flat dark backdrop gives the lens nothing to show: two slow drifting pools of
+ * accent light and a faint dot grid, which every glass rim visibly warps and
+ * magnifies as it passes over them.
+ */
+@Composable
+private fun BackdropDetail() {
+    val p = LocalGlass.current
+    val t = rememberInfiniteTransition(label = "detail")
+    val phase by t.animateFloat(
+        0f, (2 * PI).toFloat(),
+        infiniteRepeatable(tween(24000, easing = LinearEasing)),
+        label = "drift",
+    )
+    val light = p.accentLight
+    val deep = p.accentDeep
+    Canvas(Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+        // drifting pools of light
+        val c1 = Offset(w * (0.30f + 0.18f * cos(phase)), h * (0.55f + 0.25f * sin(phase * 2f)))
+        val c2 = Offset(w * (0.72f + 0.16f * sin(phase + 1.3f)), h * (0.40f + 0.28f * cos(phase * 1.5f)))
+        val c3 = Offset(w * (0.50f + 0.30f * sin(phase * 0.5f + 2.1f)), h * (0.85f + 0.10f * cos(phase)))
+        drawCircle(Brush.radialGradient(listOf(light.copy(alpha = 0.55f), Color.Transparent), c1, h * 0.55f), h * 0.55f, c1)
+        drawCircle(Brush.radialGradient(listOf(deep.copy(alpha = 0.65f), Color.Transparent), c2, h * 0.60f), h * 0.60f, c2)
+        drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC46B).copy(alpha = 0.28f), Color.Transparent), c3, h * 0.40f), h * 0.40f, c3)
+        // fine dot grid
+        val step = 22.dp.toPx()
+        val r = 1.1.dp.toPx()
+        val dot = Color.White.copy(alpha = 0.16f)
+        var y = step / 2f
+        while (y < h) {
+            var x = step / 2f
+            while (x < w) {
+                drawCircle(dot, r, Offset(x, y))
+                x += step
+            }
+            y += step
+        }
     }
 }
 

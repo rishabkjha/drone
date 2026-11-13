@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -106,21 +107,34 @@ fun Modifier.glass(
     val pos = remember { GlassPosition() }
     val lensOn = backdrop != null && liquidLensSupported()
 
+    val shaderLight = lensOn && liquidShaderSupported()
+    val lens = remember { LiquidLens() }
+
     return this
         .onGloballyPositioned { pos.offset = it.positionInRoot() }
+        // floats above the backdrop: soft, wide, dark shadow (only outside the shape shows)
+        .shadow(if (lensOn) 14.dp else 0.dp, shape, clip = false,
+            ambientColor = Color.Black.copy(alpha = 0.55f), spotColor = Color.Black.copy(alpha = 0.7f))
         .clip(shape)   // content (water, fills) stays inside the glass
         .drawWithCache {
             val outline = shape.createOutline(size, layoutDirection, this)
             val path = Path().apply { addOutline(outline) }
             val radius = (outline as? Outline.Rounded)?.roundRect?.topLeftCornerRadius?.x ?: 0f
-            val effect = liquidRenderEffect(size.width, size.height, radius, density)
-            val lensLayer = if (backdrop != null) obtainGraphicsLayer().apply { renderEffect = effect } else null
+            val lensLayer = if (backdrop != null) obtainGraphicsLayer() else null
             val rim = borderWidth.toPx()
             val minSide = minOf(size.width, size.height)
 
             onDrawWithContent {
-                // 1. the backdrop, seen through the lens
+                // with the shader, a solid tint goes into the lens itself (still see-through)
+                val shaderTint = if (shaderLight && tint != null) tint.copy(alpha = (tint.alpha * 0.85f).coerceAtMost(1f)) else Color.Transparent
+                // light from the top left, swung by the phone's roll
+                val a = (-2.2f + roll.value * 0.9f)
+                val dir = Offset(cos(a), sin(a))
+                val shine = 1f + lift * 0.7f + press * 0.5f
+
+                // 1. the backdrop, seen through the lens (the shader also lights the rim)
                 if (lensLayer != null && backdrop != null) {
+                    lensLayer.renderEffect = lens.effect(size.width, size.height, radius, density, dir.x, dir.y, shine, shaderTint)
                     lensLayer.record {
                         val o = pos.offset
                         translate(-o.x, -o.y) { drawLayer(backdrop) }
@@ -128,18 +142,21 @@ fun Modifier.glass(
                     clipPath(path) { drawLayer(lensLayer) }
                 }
 
-                // 2. the glass body: almost clear where the lens works, frostier where it can't
-                val bodyAlpha = if (lensOn) 0.55f else 1f
+                // 2. the glass body: clear where the lens works, frosted where it can't
                 when {
-                    tintBrush != null -> drawPath(path, tintBrush, alpha = 0.78f)
+                    tintBrush != null -> drawPath(path, tintBrush, alpha = if (lensOn) 0.30f else 0.78f)
+                    tint != null && shaderLight -> drawPath(
+                        path,
+                        Brush.verticalGradient(listOf(tint.copy(alpha = tint.alpha * 0.10f), Color.Transparent)),
+                    )
                     tint != null -> drawPath(
                         path,
-                        Brush.verticalGradient(listOf(tint.copy(alpha = tint.alpha * 0.44f), tint.copy(alpha = tint.alpha * 0.22f))),
+                        Brush.verticalGradient(listOf(tint.copy(alpha = tint.alpha * 0.40f), tint.copy(alpha = tint.alpha * 0.26f))),
                     )
                     else -> drawPath(
                         path,
                         Brush.verticalGradient(listOf(p.glassTop, p.glassBottom)),
-                        alpha = bodyAlpha,
+                        alpha = if (lensOn) 0.12f else 1f,
                     )
                 }
 
@@ -148,9 +165,9 @@ fun Modifier.glass(
                     clipPath(path) {
                         drawCircle(
                             Brush.radialGradient(
-                                listOf(Color.White.copy(alpha = 0.22f * press), Color.Transparent),
+                                listOf(Color.White.copy(alpha = 0.20f * press), Color.Transparent),
                                 center = touch,
-                                radius = max(size.width, size.height) * 0.75f,
+                                radius = max(size.width, size.height) * 0.6f,
                             ),
                             radius = max(size.width, size.height),
                             center = touch,
@@ -160,32 +177,31 @@ fun Modifier.glass(
 
                 drawContent()
 
-                // 4. light: from the top left, swung by the phone's roll
-                val a = (-2.2f + roll.value * 0.9f)
-                val dir = Offset(cos(a), sin(a))
+                // 4. rim light drawn here only where the shader can't (Android 12 and older),
+                //    plus a faint hairline everywhere so the edge stays crisp over tints
                 val c = center
                 val reach = max(size.width, size.height) * 0.6f
-                val from = c + dir * reach
-                val to = c - dir * reach
-                val glow = 1f + lift * 0.6f
+                val glow = shine
                 val spec = Brush.linearGradient(
                     0f to Color.White.copy(alpha = (0.95f * glow).coerceAtMost(1f)),
                     0.30f to Color.White.copy(alpha = 0.18f),
                     0.55f to Color.White.copy(alpha = 0.06f),
                     0.80f to Color.White.copy(alpha = 0.22f),
                     1f to Color.White.copy(alpha = (0.60f * glow).coerceAtMost(1f)),
-                    start = from,
-                    end = to,
+                    start = c + dir * reach,
+                    end = c - dir * reach,
                 )
-                // soft inner bevel: a few wide, faint strokes inside the edge
                 clipPath(path) {
-                    val bevel = (minSide * 0.08f).coerceIn(4.dp.toPx(), 14.dp.toPx())
-                    for (i in 1..6) {
-                        val f = i / 6f
-                        drawPath(path, spec, alpha = 0.022f * glow, style = Stroke(bevel * 2f * f))
+                    if (shaderLight) {
+                        if (tint != null || tintBrush != null) drawPath(path, spec, alpha = 0.55f, style = Stroke(rim * 2f))
+                    } else {
+                        val bevel = (minSide * 0.08f).coerceIn(4.dp.toPx(), 14.dp.toPx())
+                        for (i in 1..6) {
+                            val f = i / 6f
+                            drawPath(path, spec, alpha = 0.022f * glow, style = Stroke(bevel * 2f * f))
+                        }
+                        drawPath(path, spec, style = Stroke(rim * 2f))
                     }
-                    // the thin specular rim itself (inside half of a 2x stroke)
-                    drawPath(path, spec, style = Stroke(rim * 2f))
                 }
             }
         }

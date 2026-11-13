@@ -51,7 +51,7 @@ import kotlin.math.abs
 import kotlin.math.sin
 
 /** Rounder than before: liquid glass panels read as soft, continuous shapes. */
-val GlassShape = RoundedCornerShape(28.dp)
+val GlassShape = RoundedCornerShape(36.dp)
 
 /**
  * Liquid glass button. Pressing swells it a little on a soft spring and lights
@@ -72,14 +72,18 @@ fun GlassButton(
     val pressed by interaction.collectIsPressedAsState()
     val press by animateFloatAsState(
         if (pressed) 1f else 0f,
-        spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMediumLow),
+        spring(dampingRatio = 0.42f, stiffness = Spring.StiffnessMediumLow),
         label = "press",
     )
     var touch by remember { mutableStateOf<Offset?>(null) }
     Box(
         modifier
             .fillMaxSize()
-            .graphicsLayer { val sc = 1f + 0.035f * press; scaleX = sc; scaleY = sc }
+            .graphicsLayer {
+                // liquid squish: swells wider than tall, overshooting on the spring
+                scaleX = 1f + 0.06f * press
+                scaleY = 1f + 0.025f * press
+            }
             .pointerInput(Unit) {
                 // follow the finger for the glow; never consumes, so the click still works
                 awaitEachGesture {
