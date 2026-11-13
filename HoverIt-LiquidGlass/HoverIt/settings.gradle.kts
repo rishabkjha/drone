@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HoverIt"
+rootProject.name = "HoverIt Liquid"
 include(":app")

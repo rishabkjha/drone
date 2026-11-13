@@ -12,8 +12,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -26,6 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,47 +50,13 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
 
-val GlassShape = RoundedCornerShape(22.dp)
+/** Rounder than before: liquid glass panels read as soft, continuous shapes. */
+val GlassShape = RoundedCornerShape(28.dp)
 
 /**
- * Frosted glass panel: translucent vertical gradient, a light rim that fades
- * towards the bottom and a soft highlight across the top edge.
- * [tint] (optional) colours the glass, e.g. green / red for state buttons.
+ * Liquid glass button. Pressing swells it a little on a soft spring and lights
+ * the glass from under your finger.
  */
-@Composable
-fun Modifier.glass(
-    shape: Shape = GlassShape,
-    tint: Color? = null,
-    borderWidth: Dp = 1.6.dp,
-): Modifier {
-    val p = LocalGlass.current
-    val top = if (tint != null) tint.copy(alpha = 0.55f) else p.glassTop
-    val bottom = if (tint != null) tint.copy(alpha = 0.22f) else p.glassBottom
-    return this
-        .clip(shape)
-        .background(Brush.verticalGradient(listOf(top, bottom)))
-        .drawWithContent {
-            drawContent()
-            // highlight sheen on the upper third
-            drawRect(
-                Brush.verticalGradient(
-                    0f to Color.White.copy(alpha = 0.10f),
-                    0.35f to Color.Transparent,
-                ),
-            )
-        }
-        .border(
-            borderWidth,
-            Brush.linearGradient(
-                listOf(p.borderTop, p.borderBottom, p.borderTop.copy(alpha = p.borderTop.alpha * 0.6f)),
-                start = Offset.Zero,
-                end = Offset.Infinite,
-            ),
-            shape,
-        )
-}
-
-/** Glass button with a springy press. */
 @Composable
 fun GlassButton(
     label: String,
@@ -101,16 +70,29 @@ fun GlassButton(
     val p = LocalGlass.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        if (pressed) 0.94f else 1f,
-        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+    val press by animateFloatAsState(
+        if (pressed) 1f else 0f,
+        spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMediumLow),
         label = "press",
     )
+    var touch by remember { mutableStateOf<Offset?>(null) }
     Box(
         modifier
             .fillMaxSize()
-            .graphicsLayer { scaleX = scale; scaleY = scale }
-            .glass(tint = tint)
+            .graphicsLayer { val sc = 1f + 0.035f * press; scaleX = sc; scaleY = sc }
+            .pointerInput(Unit) {
+                // follow the finger for the glow; never consumes, so the click still works
+                awaitEachGesture {
+                    touch = awaitFirstDown(requireUnconsumed = false).position
+                    while (true) {
+                        val e = awaitPointerEvent()
+                        val c = e.changes.firstOrNull() ?: break
+                        if (!c.pressed) break
+                        touch = c.position
+                    }
+                }
+            }
+            .glass(tint = tint, press = press, touch = touch)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

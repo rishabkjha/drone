@@ -10,6 +10,8 @@ import android.view.WindowManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
@@ -81,14 +83,15 @@ class WaterSurface(val columns: Int = 32) {
 }
 
 /**
- * A [WaterSurface] driven by how far the phone is rolled: gravity sensor
- * (accelerometer as a fallback), remapped for the landscape rotation. Stays
- * flat when the phone has no such sensor.
+ * How far the phone is rolled, in radians (right side up = +), from the
+ * gravity sensor (accelerometer as a fallback), remapped for the landscape
+ * rotation and lightly smoothed. Stays 0 when the phone has no such sensor.
+ * One listener for the whole app: the water and the glass light both read it.
  */
 @Composable
-fun rememberWater(): WaterSurface {
+fun rememberPhoneRoll(): State<Float> {
     val context = LocalContext.current
-    val water = remember { WaterSurface() }
+    val roll = remember { mutableFloatStateOf(0f) }
 
     DisposableEffect(context) {
         val sm = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
@@ -109,8 +112,8 @@ fun rememberWater(): WaterSurface {
                     else -> dx to dy
                 }
                 // gravity reads "up" in screen axes; the level is perpendicular to it
-                val a = atan2(-sx, sy)
-                water.rawTilt = max(-WaterSurface.MAX_TILT, min(WaterSurface.MAX_TILT, a))
+                val a = max(-WaterSurface.MAX_TILT, min(WaterSurface.MAX_TILT, atan2(-sx, sy)))
+                roll.floatValue += (a - roll.floatValue) * 0.35f
             }
 
             override fun onAccuracyChanged(s: Sensor?, accuracy: Int) {}
@@ -118,11 +121,19 @@ fun rememberWater(): WaterSurface {
         if (sm != null && sensor != null) sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME)
         onDispose { sm?.unregisterListener(listener) }
     }
+    return roll
+}
 
+/** A [WaterSurface] that follows the phone's roll ([LocalPhoneRoll]). */
+@Composable
+fun rememberWater(): WaterSurface {
+    val water = remember { WaterSurface() }
+    val roll = LocalPhoneRoll.current
     LaunchedEffect(water) {
         var last = 0L
         while (true) {
             withFrameNanos { now ->
+                water.rawTilt = roll.value
                 if (last != 0L) water.step(((now - last) / 1e9f).coerceIn(0f, 0.05f))
                 last = now
             }

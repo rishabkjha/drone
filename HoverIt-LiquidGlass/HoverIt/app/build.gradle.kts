@@ -9,7 +9,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.hoverit.app"
+        applicationId = "com.hoverit.liquid"   // own id: installs next to the glassmorphism HoverIt
         minSdk = 26
         targetSdk = 35
         versionCode = 1

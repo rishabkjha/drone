@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hoverit.app.FlightMode
@@ -63,8 +64,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun HoverItApp(vm: HoverItViewModel) {
     HoverItTheme(blue = vm.blueTheme) {
-        Box(Modifier.fillMaxSize()) {
-            Backdrop()
+        LiquidGlassRoot(backdrop = { Backdrop() }) {
             BackHandler(enabled = vm.screen == Screen.Options || vm.screen == Screen.Tuning) { vm.back() }
 
             AnimatedContent(
@@ -164,10 +164,12 @@ private fun Modifier.staggerIn(index: Int): Modifier {
 
 private fun AnimatedContentTransitionScope<Screen>.sideTransition(fromLeft: Boolean): ContentTransform {
     val sign = if (fromLeft) -1 else 1
-    val inSpec = tween<Float>(520, delayMillis = 90, easing = FastOutSlowInEasing)
-    return (slideInHorizontally(tween(520, delayMillis = 90, easing = FastOutSlowInEasing)) { sign * it / 3 } +
-            fadeIn(inSpec) + scaleIn(inSpec, initialScale = 0.88f)) togetherWith
-            (slideOutHorizontally(tween(320)) { -sign * it / 5 } + fadeOut(tween(260)) + scaleOut(tween(320), targetScale = 0.9f))
+    // springs instead of fixed curves: panels settle like liquid, with a soft overshoot
+    val slide = spring<IntOffset>(dampingRatio = 0.78f, stiffness = Spring.StiffnessLow)
+    val grow = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessLow)
+    return (slideInHorizontally(slide) { sign * it / 3 } +
+            fadeIn(tween(360, delayMillis = 60)) + scaleIn(grow, initialScale = 0.86f)) togetherWith
+            (slideOutHorizontally(tween(300)) { -sign * it / 5 } + fadeOut(tween(220)) + scaleOut(tween(300), targetScale = 0.9f))
 }
 
 @Composable

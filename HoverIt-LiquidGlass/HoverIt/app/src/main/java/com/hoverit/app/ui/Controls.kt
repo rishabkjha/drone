@@ -62,7 +62,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private val ThumbShape = RoundedCornerShape(18.dp)
+private val ThumbShape = RoundedCornerShape(24.dp)
 
 /** -1..1 -> 0..255, centre = 128 */
 private fun toByte(v: Float): Int = (((v.coerceIn(-1f, 1f) + 1f) / 2f) * 255f).roundToInt()
@@ -70,19 +70,22 @@ private fun toByte(v: Float): Int = (((v.coerceIn(-1f, 1f) + 1f) / 2f) * 255f).r
 /** 0..255 -> -1..1 */
 private fun fromByte(b: Int): Float = b.coerceIn(0, 255) / 255f * 2f - 1f
 
+/**
+ * Liquid glass droplet in the accent colours: the background bends through
+ * its rim, and it swells and brightens while you hold it.
+ */
 @Composable
 private fun Thumb(active: Boolean, modifier: Modifier = Modifier, locked: Boolean = false) {
-    val scale by animateFloatAsState(
-        if (active) 1.1f else 1f,
-        spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "thumbScale",
+    val lift by animateFloatAsState(
+        if (active) 1f else 0f,
+        spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow),
+        label = "thumbLift",
     )
     Box(
         modifier
-            .graphicsLayer { scaleX = scale; scaleY = scale }
-            .shadow(if (active) 18.dp else 8.dp, ThumbShape, ambientColor = HoverColors.Coral, spotColor = HoverColors.Magenta)
-            .clip(ThumbShape)
-            .background(HoverColors.Accent),
+            .graphicsLayer { val sc = 1f + 0.12f * lift; scaleX = sc; scaleY = sc }
+            .shadow((8f + 14f * lift).dp, ThumbShape, ambientColor = HoverColors.Coral, spotColor = HoverColors.Magenta)
+            .glass(shape = ThumbShape, tintBrush = HoverColors.Accent, borderWidth = 1.4.dp, lift = lift),
     )
 }
 
