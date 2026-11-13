@@ -2,6 +2,7 @@ package com.hoverit.app.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.Animatable
@@ -134,13 +135,15 @@ private fun BackdropDetail() {
         val c1 = Offset(w * (0.30f + 0.18f * cos(phase)), h * (0.55f + 0.25f * sin(phase * 2f)))
         val c2 = Offset(w * (0.72f + 0.16f * sin(phase + 1.3f)), h * (0.40f + 0.28f * cos(phase * 1.5f)))
         val c3 = Offset(w * (0.50f + 0.30f * sin(phase * 0.5f + 2.1f)), h * (0.85f + 0.10f * cos(phase)))
-        drawCircle(Brush.radialGradient(listOf(light.copy(alpha = 0.55f), Color.Transparent), c1, h * 0.55f), h * 0.55f, c1)
-        drawCircle(Brush.radialGradient(listOf(deep.copy(alpha = 0.65f), Color.Transparent), c2, h * 0.60f), h * 0.60f, c2)
-        drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC46B).copy(alpha = 0.28f), Color.Transparent), c3, h * 0.40f), h * 0.40f, c3)
+        drawCircle(Brush.radialGradient(listOf(light.copy(alpha = 0.26f), Color.Transparent), c1, h * 0.55f), h * 0.55f, c1)
+        drawCircle(Brush.radialGradient(listOf(deep.copy(alpha = 0.32f), Color.Transparent), c2, h * 0.60f), h * 0.60f, c2)
+        drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC46B).copy(alpha = 0.12f), Color.Transparent), c3, h * 0.40f), h * 0.40f, c3)
+        // calm the whole backdrop down so the controls in front stay readable
+        drawRect(Color.Black.copy(alpha = 0.32f))
         // fine dot grid
         val step = 22.dp.toPx()
         val r = 1.1.dp.toPx()
-        val dot = Color.White.copy(alpha = 0.16f)
+        val dot = Color.White.copy(alpha = 0.14f)
         var y = step / 2f
         while (y < h) {
             var x = step / 2f
@@ -216,9 +219,11 @@ private fun AnimatedContentTransitionScope<Screen>.sideTransition(fromLeft: Bool
     // springs instead of fixed curves: panels settle like liquid, with a soft overshoot
     val slide = spring<IntOffset>(dampingRatio = 0.78f, stiffness = Spring.StiffnessLow)
     val grow = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessLow)
-    return (slideInHorizontally(slide) { sign * it / 3 } +
+    return ((slideInHorizontally(slide) { sign * it / 3 } +
             fadeIn(tween(360, delayMillis = 60)) + scaleIn(grow, initialScale = 0.86f)) togetherWith
-            (slideOutHorizontally(tween(300)) { -sign * it / 5 } + fadeOut(tween(220)) + scaleOut(tween(300), targetScale = 0.9f))
+            (slideOutHorizontally(tween(300)) { -sign * it / 5 } + fadeOut(tween(220)) + scaleOut(tween(300), targetScale = 0.9f)))
+        // don't clip to the pane while animating: panels may slide past its edge (and their shadows show)
+        .using(SizeTransform(clip = false))
 }
 
 @Composable

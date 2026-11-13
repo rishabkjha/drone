@@ -39,6 +39,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
@@ -51,10 +58,22 @@ import kotlin.math.abs
 import kotlin.math.sin
 
 /** Rounder than before: liquid glass panels read as soft, continuous shapes. */
-val GlassShape = RoundedCornerShape(36.dp)
+val GlassShape: Shape = LiquidShape(maxRadius = 32.dp, fraction = 0.26f)
 
-/** Fully round ends: the centre buttons are liquid capsules. */
-val CapsuleShape = RoundedCornerShape(50)
+/** Centre buttons: a bit rounder, but never a full pill on a short button. */
+val CapsuleShape: Shape = LiquidShape(maxRadius = 40.dp, fraction = 0.34f)
+
+/**
+ * Rounded rectangle whose corner radius follows the element's size: big panels
+ * get soft [maxRadius] corners, short buttons get proportionally smaller ones
+ * ([fraction] of the shorter side), so nothing turns into an over-curvy pill.
+ */
+class LiquidShape(private val maxRadius: Dp, private val fraction: Float) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val r = minOf(with(density) { maxRadius.toPx() }, minOf(size.width, size.height) * fraction)
+        return Outline.Rounded(RoundRect(Rect(Offset.Zero, size), CornerRadius(r)))
+    }
+}
 
 /**
  * Liquid glass button. Pressing swells it a little on a soft spring and lights
