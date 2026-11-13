@@ -2,6 +2,8 @@ package com.hoverit.app.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.Animatable
@@ -164,10 +166,14 @@ private fun Modifier.staggerIn(index: Int): Modifier {
 
 private fun AnimatedContentTransitionScope<Screen>.sideTransition(fromLeft: Boolean): ContentTransform {
     val sign = if (fromLeft) -1 else 1
-    val inSpec = tween<Float>(520, delayMillis = 90, easing = FastOutSlowInEasing)
-    return (slideInHorizontally(tween(520, delayMillis = 90, easing = FastOutSlowInEasing)) { sign * it / 3 } +
-            fadeIn(inSpec) + scaleIn(inSpec, initialScale = 0.88f)) togetherWith
-            (slideOutHorizontally(tween(320)) { -sign * it / 5 } + fadeOut(tween(260)) + scaleOut(tween(320), targetScale = 0.9f))
+    // springs instead of fixed curves: panels settle with a soft overshoot (same as HoverIt Liquid)
+    val slide = spring<IntOffset>(dampingRatio = 0.78f, stiffness = Spring.StiffnessLow)
+    val grow = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessLow)
+    return ((slideInHorizontally(slide) { sign * it / 3 } +
+            fadeIn(tween(360, delayMillis = 60)) + scaleIn(grow, initialScale = 0.86f)) togetherWith
+            (slideOutHorizontally(tween(300)) { -sign * it / 5 } + fadeOut(tween(220)) + scaleOut(tween(300), targetScale = 0.9f)))
+        // don't clip to the pane while animating: panels may slide past its edge next to the centre buttons
+        .using(SizeTransform(clip = false))
 }
 
 @Composable

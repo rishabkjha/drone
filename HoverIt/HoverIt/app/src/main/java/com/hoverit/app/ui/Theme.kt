@@ -9,6 +9,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -84,6 +86,8 @@ val LabelStyle = TextStyle(
     fontWeight = FontWeight.SemiBold,
     fontSize = 17.sp,
     letterSpacing = 1.sp,
+    // soft shadow keeps labels readable over the glass
+    shadow = Shadow(Color.Black.copy(alpha = 0.35f), Offset(0f, 1f), 6f),
 )
 
 /** Numbers and small readouts (stick values, height, gains). */

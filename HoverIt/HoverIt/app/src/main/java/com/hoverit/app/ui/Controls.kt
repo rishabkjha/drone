@@ -62,7 +62,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private val ThumbShape = RoundedCornerShape(18.dp)
+private val ThumbShape = RoundedCornerShape(50)   // round thumb, same as HoverIt Liquid
 
 /** -1..1 -> 0..255, centre = 128 */
 private fun toByte(v: Float): Int = (((v.coerceIn(-1f, 1f) + 1f) / 2f) * 255f).roundToInt()

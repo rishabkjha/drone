@@ -36,6 +36,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
@@ -47,7 +54,23 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
 
-val GlassShape = RoundedCornerShape(22.dp)
+/** Panels and buttons: corner radius follows the element's size (same shapes as HoverIt Liquid). */
+val GlassShape: Shape = LiquidShape(maxRadius = 32.dp, fraction = 0.26f)
+
+/** Centre buttons: a bit rounder, but never a full pill on a short button. */
+val CapsuleShape: Shape = LiquidShape(maxRadius = 40.dp, fraction = 0.34f)
+
+/**
+ * Rounded rectangle whose corner radius follows the element's size: big panels
+ * get soft [maxRadius] corners, short buttons get proportionally smaller ones
+ * ([fraction] of the shorter side), so nothing turns into an over-curvy pill.
+ */
+class LiquidShape(private val maxRadius: Dp, private val fraction: Float) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val r = minOf(with(density) { maxRadius.toPx() }, minOf(size.width, size.height) * fraction)
+        return Outline.Rounded(RoundRect(Rect(Offset.Zero, size), CornerRadius(r)))
+    }
+}
 
 /**
  * Frosted glass panel: translucent vertical gradient, a light rim that fades
@@ -97,20 +120,25 @@ fun GlassButton(
     onClick: () -> Unit,
     background: @Composable () -> Unit = {},
     labelStyle: TextStyle = LabelStyle,
+    shape: Shape = GlassShape,
 ) {
     val p = LocalGlass.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        if (pressed) 0.94f else 1f,
-        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+    val press by animateFloatAsState(
+        if (pressed) 1f else 0f,
+        spring(dampingRatio = 0.42f, stiffness = Spring.StiffnessMediumLow),
         label = "press",
     )
     Box(
         modifier
             .fillMaxSize()
-            .graphicsLayer { scaleX = scale; scaleY = scale }
-            .glass(tint = tint)
+            .graphicsLayer {
+                // squishy press: swells wider than tall, overshooting on the spring
+                scaleX = 1f + 0.06f * press
+                scaleY = 1f + 0.025f * press
+            }
+            .glass(shape = shape, tint = tint)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -154,6 +182,7 @@ fun ConnectButton(enabled: Boolean, connected: Boolean, address: String?, modifi
         subLabel = if (connected) address else if (searching) "tap to stop" else null,
         tint = if (searching) tint.copy(alpha = glow) else tint,
         modifier = modifier,
+        shape = CapsuleShape,
         onClick = onClick,
     )
 }
@@ -176,6 +205,7 @@ fun ArmButton(armed: Boolean, refusals: Int, modifier: Modifier, onClick: () -> 
         subLabel = if (armed) "ARMED" else "disarmed",
         tint = tint,
         modifier = modifier.graphicsLayer { translationX = shake.value * density },
+        shape = CapsuleShape,
         onClick = onClick,
     )
 }
@@ -202,6 +232,7 @@ fun OptionsBatteryButton(battery: Int, connected: Boolean, active: Boolean, modi
         label = "Options",
         subLabel = if (connected) "battery $percent%" else "battery --",
         modifier = modifier,
+        shape = CapsuleShape,
         onClick = onClick,
         background = {
             Canvas(Modifier.fillMaxSize()) {
